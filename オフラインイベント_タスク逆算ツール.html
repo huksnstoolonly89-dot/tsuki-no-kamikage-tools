@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>オフラインイベント タスク逆算ツール｜月ノ神影</title>
+<style>
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: #e2ddd6;
+    --border-strong: #c8c2b8;
+    --text: #1a1a1a;
+    --text-sub: #6b6560;
+    --text-xs: #9e9790;
+    --accent: #6b5ea8;
+    --accent-light: #ede9f8;
+    --blue: #3b7dd8;
+    --blue-light: #e8f0fb;
+    --red: #c94040;
+    --red-light: #fce8e8;
+    --amber: #b06820;
+    --amber-light: #fef0e0;
+    --green: #2e7d52;
+    --green-light: #e6f4ec;
+    --mtg-bg: #f0ede8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .header {
+    background: #1a1630;
+    padding: 20px 24px;
+    border-bottom: 1px solid #2d2848;
+  }
+  .header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e8e4f8;
+    letter-spacing: 0.05em;
+  }
+  .header p {
+    font-size: 12px;
+    color: #8b84b0;
+    margin-top: 3px;
+  }
+
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ctrl-label {
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  input[type="date"] {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="date"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(107,94,168,0.15);
+  }
+
+  .seg {
+    display: flex;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg button {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 14px;
+    border: none;
+    background: var(--bg);
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 500;
+  }
+  .seg button + button {
+    border-left: 1px solid var(--border-strong);
+  }
+  .seg button.on {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .reset-btn {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--amber);
+    border-radius: 6px;
+    background: var(--amber-light);
+    color: var(--amber);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all .15s;
+    margin-left: auto;
+  }
+  .reset-btn:hover { background: #fde0c0; }
+
+  .no-date {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--text-xs);
+    font-size: 14px;
+  }
+
+  .phase { margin-bottom: 24px; }
+
+  .phase-head {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sub);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 4px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-head {
+    display: grid;
+    grid-template-columns: 18px 76px 1fr 84px 84px 32px;
+    gap: 6px;
+    padding: 0 10px;
+    margin-bottom: 3px;
+  }
+  .col-head span {
+    font-size: 10px;
+    color: var(--text-xs);
+    text-align: right;
+  }
+  .col-head span:nth-child(3) { text-align: left; }
+
+  .tr {
+    display: grid;
+    grid-template-columns: 18px 76px 1fr 84px 84px 32px;
+    gap: 6px;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 7px;
+    margin-bottom: 3px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color .12s;
+  }
+  .tr:hover { border-color: var(--border-strong); }
+  .tr.hide { display: none; }
+  .tr.mtg-row { background: var(--mtg-bg); border-color: var(--border-strong); }
+  .tr.past .end { color: var(--red); }
+  .tr.today .end { color: var(--amber); font-weight: 700; }
+
+  .tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .t-all { background: #f0ede8; color: #6b6560; }
+  .t-big { background: var(--red-light); color: var(--red); }
+  .t-sml { background: var(--blue-light); color: var(--blue); }
+  .t-opt { background: var(--amber-light); color: var(--amber); }
+
+  .tname {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  .dcell {
+    font-size: 11px;
+    text-align: right;
+    color: var(--text-xs);
+    white-space: nowrap;
+  }
+  .end {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--text-sub);
+    white-space: nowrap;
+  }
+
+  .ck {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--amber);
+  }
+
+  .cp {
+    width: 28px;
+    height: 26px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-sub);
+    transition: all .12s;
+  }
+  .cp:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .cp.done { background: var(--green-light); border-color: var(--green); color: var(--green); }
+
+  .phase-note {
+    font-size: 10px;
+    color: var(--text-xs);
+    padding: 4px 10px;
+    font-style: italic;
+  }
+
+  .legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-sub);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>オフラインイベント タスク逆算ツール</h1>
+  <p>月ノ神影｜開催日と規模を選択するとタスクの開始日・期限日が自動計算されます</p>
+</div>
+
+<div class="main">
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">開催日</span>
+      <input type="date" id="edate">
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">規模</span>
+      <div class="seg">
+        <button class="on" onclick="setScale('large',this)">大規模</button>
+        <button onclick="setScale('small',this)">小規模</button>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetOpts()">🟡 全て選択に戻す</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="tag t-all">⚫共通</span> 両規模共通</div>
+    <div class="legend-item"><span class="tag t-big">🔴大規模</span> 大規模のみ必須</div>
+    <div class="legend-item"><span class="tag t-sml">🔵小規模</span> 小規模のみ必須</div>
+    <div class="legend-item"><span class="tag t-opt">🟡選択</span> チェックでON/OFF</div>
+    <div class="legend-item" style="margin-left:auto;font-size:10px;color:var(--text-xs)">📋 = MTG・単日実施タスク</div>
+  </div>
+
+  <div id="wrap">
+    <div class="no-date">開催日を入力するとタスクと期限が表示されます</div>
+  </div>
+</div>
+
+<script>
+const T=[
+  {ph:"フェーズ0キックオフ",end_l:-187,end_s:-97,dur:1,tag:"all",name:"📋 フェーズ0キックオフMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:14,tag:"all",name:"イベントのコンセプト・規模感の決定",mtg:false,phMtg_l:-187,phMtg_s:-97},
+  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:21,tag:"all",name:"会場候補の選定・見積もり取得",mtg:false,phMtg_l:-187,phMtg_s:-97},
+  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:14,tag:"all",name:"全体予算・チケット価格の設定",mtg:false,phMtg_l:-187,phMtg_s:-97},
+  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:5,tag:"big",name:"teket仮押さえ",mtg:false,phMtg_l:-187,phMtg_s:-97},
+  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:5,tag:"sml",name:"会場仮押さえ",mtg:false,phMtg_l:-187,phMtg_s:-97},
+  {ph:"フェーズ1キックオフ",end_l:-127,end_s:-67,dur:1,tag:"all",name:"📋 フェーズ1キックオフMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:5,tag:"all",name:"全体スケジュールの作成・Notionへの登録",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:21,tag:"all",name:"イベント概要の決定（日時・場所・規模・目的）",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:21,tag:"all",name:"プログラム概要の決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:7,tag:"all",name:"スタッフ募集の開始",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:14,tag:"opt",name:"ノベルティの方向性決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:7,tag:"all",name:"撮影プランの決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-100,end_s:-40,dur:14,tag:"opt",name:"プログラム内映像の内容考案",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ1｜企画・基本設計",end_l:-90,end_s:-30,dur:14,tag:"opt",name:"撮影スタッフ外注依頼（必要な場合）",mtg:false,phMtg_l:-127,phMtg_s:-67},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"all",name:"各担当の進捗確認・催促（週次）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:56,tag:"opt",name:"制作物の外注発注（納品まで6〜8週間確保）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"プログラム設計フォーマットへの落とし込み",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"プログラム詳細進行の考案（演出込み）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"opt",name:"スライド用文言の決定（投影がある場合）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"会場提出用台本・タイムシートの作成",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:28,tag:"opt",name:"演出・BGM指示書の作成",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"備品リストの作成",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"告知文の作成（LINE・メール・会員サイト・Discord）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"当日入場処理方法の決定（受付フロー・スタッフ配置）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"opt",name:"スタッフ報酬の決定",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"opt",name:"会場下見の日程調整",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-45,end_s:-21,dur:1,tag:"opt",name:"📋 会場下見の実施",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"opt",name:"ノベルティデザイン可否問い合わせ・決定・発注",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"big",name:"teket販売ページ作成",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"big",name:"チケット販売開始",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"sml",name:"UTAGE販売ページ作成",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"sml",name:"UTAGE販売開始",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-30,end_s:-30,dur:30,tag:"opt",name:"プログラム内映像制作の完了（30日前厳守）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"opt",name:"映像撮影日の調整",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-45,end_s:-21,dur:1,tag:"opt",name:"📋 映像撮影実施",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"all",name:"緊急時・悪天候時の代替プランの確認",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"全制作物の納品確認",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"opt",name:"会場打ち合わせの日程調整",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-21,end_s:-14,dur:1,tag:"opt",name:"📋 会場打ち合わせの実施",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-10,end_s:-10,dur:14,tag:"all",name:"演出・BGM指示書の提出確認・催促（10日前までに会場提出）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:14,tag:"all",name:"当日タイムライン・スタッフ役割表の作成・配布",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"緊急連絡体制の確認・共有",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:21,tag:"all",name:"プログラム台本の最終決定（10日前以降変更不可）",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"参加者へのリマインド配信",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"opt",name:"📋 リハーサルの実施（音響・映像・進行確認）",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:5,tag:"all",name:"当日の撮影プラン最終確認",mtg:false,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ3｜最終準備",end_l:-14,end_s:-14,dur:1,tag:"opt",name:"📋 スタッフオリエンテーションの実施",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ5｜事後対応",end_l:1,end_s:1,dur:1,tag:"all",name:"📋 KPT振り返りMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
+  {ph:"フェーズ5｜事後対応",end_l:2,end_s:2,dur:1,tag:"all",name:"参加者へのフォローメッセージ（Discord）",mtg:false,phMtg_l:1,phMtg_s:1},
+  {ph:"フェーズ5｜事後対応",end_l:7,end_s:7,dur:7,tag:"all",name:"経費精算整理（エクセル）",mtg:false,phMtg_l:1,phMtg_s:1},
+  {ph:"フェーズ5｜事後対応",end_l:7,end_s:7,dur:5,tag:"all",name:"改善点のNotionへの記録",mtg:false,phMtg_l:1,phMtg_s:1},
+  {ph:"フェーズ5｜事後対応",end_l:14,end_s:14,dur:14,tag:"all",name:"アーカイブ動画の編集・公開手配",mtg:false,phMtg_l:1,phMtg_s:1},
+  {ph:"フェーズ5｜事後対応",end_l:14,end_s:14,dur:5,tag:"all",name:"会員サイト「集」フォルダへの掲載・告知",mtg:false,phMtg_l:1,phMtg_s:1},
+];
+
+let scale='large';
+let opts={};
+T.forEach((_,i)=>{opts[i]=true});
+
+function setScale(s,btn){
+  scale=s;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+function resetOpts(){T.forEach((_,i)=>{opts[i]=true});render();}
+function addDays(base,n){const d=new Date(base);d.setDate(d.getDate()+n);return d;}
+function fmt(d){return (d.getMonth()+1)+'月'+d.getDate()+'日';}
+
+function visible(t,i){
+  if(t.tag==='big'&&scale==='small') return false;
+  if(t.tag==='sml'&&scale==='large') return false;
+  if(t.tag==='opt'&&!opts[i]) return false;
+  return true;
+}
+
+function tagEl(tag){
+  if(tag==='all') return `<span class="tag t-all">⚫共通</span>`;
+  if(tag==='big') return `<span class="tag t-big">🔴大規模</span>`;
+  if(tag==='sml') return `<span class="tag t-sml">🔵小規模</span>`;
+  return `<span class="tag t-opt">🟡選択</span>`;
+}
+
+function isMtgStyle(t){
+  return t.mtg && (t.name.includes('キックオフ')||t.name.includes('KPT')||t.name.includes('振り返り'));
+}
+
+function render(){
+  const val=document.getElementById('edate').value;
+  const wrap=document.getElementById('wrap');
+  if(!val){
+    wrap.innerHTML='<div class="no-date">開催日を入力するとタスクと期限が表示されます</div>';
+    return;
+  }
+  const base=new Date(val+'T00:00:00');
+  const today=new Date();today.setHours(0,0,0,0);
+  const phases=[...new Set(T.map(t=>t.ph))];
+  let html='';
+
+  phases.forEach(ph=>{
+    const pts=T.map((t,i)=>({...t,i})).filter(t=>t.ph===ph);
+    const vpts=pts.filter(t=>visible(t,t.i));
+    if(!vpts.length) return;
+
+    const mainMtg=pts.find(t=>t.mtg&&isMtgStyle(t));
+    const mtgEndD=mainMtg?addDays(base,scale==='large'?mainMtg.end_l:mainMtg.end_s):null;
+    const afterMtg=mtgEndD?addDays(mtgEndD,1):null;
+
+    html+=`<div class="phase"><div class="phase-head">${ph}</div>
+    <div class="col-head"><span></span><span></span><span>タスク名</span><span>開始日</span><span>期限日</span><span></span></div>`;
+
+    const sorted=[...pts.filter(t=>isMtgStyle(t)),...pts.filter(t=>!isMtgStyle(t))];
+
+    sorted.forEach(t=>{
+      const endOff=scale==='large'?t.end_l:t.end_s;
+      const endD=addDays(base,endOff);
+
+      let startD;
+      if(t.mtg){
+        startD=new Date(endD);
+      } else {
+        const durStart=addDays(endD,-t.dur+1);
+        const phMtgOff=scale==='large'?t.phMtg_l:t.phMtg_s;
+        const extAfterMtg=(phMtgOff!==null&&phMtgOff!==undefined)?addDays(base,phMtgOff+1):null;
+        const mtgRef=afterMtg||extAfterMtg;
+        startD=mtgRef&&mtgRef>durStart?new Date(mtgRef):durStart;
+      }
+
+      const diff=Math.round((endD-today)/(1000*60*60*24));
+      const isPast=diff<0;
+      const isToday=diff===0;
+      const vis=visible(t,t.i);
+      const isMtgBg=isMtgStyle(t);
+      const cls=['tr',isMtgBg?'mtg-row':'',!vis?'hide':'',isPast&&vis?'past':'',isToday&&vis?'today':''].filter(Boolean).join(' ');
+      const ctrl=t.tag==='opt'
+        ?`<input type="checkbox" class="ck" ${opts[t.i]?'checked':''} onchange="toggleOpt(${t.i})">`
+        :`<span></span>`;
+      const nameOnly=t.name.replace('📋 ','');
+      html+=`<div class="${cls}">
+        ${ctrl}
+        ${tagEl(t.tag)}
+        <span class="tname">${t.name}</span>
+        <span class="dcell">${fmt(startD)}</span>
+        <span class="end">${fmt(endD)}</span>
+        <button class="cp" onclick="copyName(this,'${nameOnly.replace(/'/g,"&#39;").replace(/"/g,"&quot;")}')" title="タスク名をコピー">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  wrap.innerHTML=html;
+}
+
+function toggleOpt(i){opts[i]=!opts[i];render();}
+
+function copyName(btn,name){
+  navigator.clipboard.writeText(name).then(()=>{
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    btn.classList.add('done');
+    setTimeout(()=>{
+      btn.classList.remove('done');
+      btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    },1500);
+  }).catch(()=>{
+    // フォールバック
+    const el=document.createElement('textarea');
+    el.value=name;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    btn.classList.add('done');
+    setTimeout(()=>btn.classList.remove('done'),1500);
+  });
+}
+
+document.getElementById('edate').addEventListener('change',render);
+</script>
+</body>
+</html>
