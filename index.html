@@ -844,18 +844,18 @@ function sendToNotion(){
     btn.disabled=false;
     btn.textContent='📤 Notionに送信';
     if(d.ok){
-      showToast('✅ '+d.created+'件をNotionに作成しました');
+      alert('✅ 送信完了\n\n'+d.created+'件のタスクをNotionに作成しました。');
     } else if(d.error){
-      showToast('⚠️ '+d.error);
+      alert('⚠️ 送信できませんでした\n\n'+d.error);
     } else {
-      showToast('⚠️ '+d.created+'/'+d.total+'件作成（一部失敗）');
+      alert('⚠️ 一部のタスク作成に失敗しました\n\n作成：'+d.created+' / '+d.total+'件\n\n失敗の詳細：\n'+((d.errors&&d.errors.length)?d.errors.join('\n'):'不明'));
       if(d.errors&&d.errors.length) console.error(d.errors.join('\n'));
     }
   })
   .catch(err=>{
     btn.disabled=false;
     btn.textContent='📤 Notionに送信';
-    showToast('⚠️ 送信に失敗しました');
+    alert('⚠️ 送信に失敗しました\n\n通信エラーが発生しました。時間をおいて再度お試しください。');
     console.error(err);
   });
 }
