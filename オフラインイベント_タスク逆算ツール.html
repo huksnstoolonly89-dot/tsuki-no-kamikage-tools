@@ -23,6 +23,8 @@
     --amber-light: #fef0e0;
     --green: #2e7d52;
     --green-light: #e6f4ec;
+    --crit: #b8442e;
+    --crit-light: #fbe4dd;
     --mtg-bg: #f0ede8;
     --shadow: 0 1px 3px rgba(0,0,0,0.08);
     --shadow-md: 0 2px 8px rgba(0,0,0,0.10);
@@ -56,7 +58,7 @@
   }
 
   .main {
-    max-width: 900px;
+    max-width: 940px;
     margin: 0 auto;
     padding: 20px 16px 40px;
   }
@@ -66,7 +68,7 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px 20px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -86,7 +88,7 @@
     white-space: nowrap;
   }
 
-  input[type="date"] {
+  input[type="date"], input[type="text"] {
     font-family: inherit;
     font-size: 13px;
     padding: 6px 10px;
@@ -95,9 +97,10 @@
     background: var(--bg);
     color: var(--text);
     outline: none;
-    cursor: pointer;
   }
-  input[type="date"]:focus {
+  input[type="date"] { cursor: pointer; }
+  input[type="text"] { width: 180px; }
+  input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(107,94,168,0.15);
   }
@@ -127,20 +130,40 @@
     color: #fff;
   }
 
-  .reset-btn {
+  .btn {
     font-family: inherit;
     font-size: 12px;
-    padding: 6px 12px;
-    border: 1px solid var(--amber);
+    padding: 7px 14px;
     border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all .15s;
+    border: 1px solid transparent;
+  }
+  .btn-amber {
+    border-color: var(--amber);
     background: var(--amber-light);
     color: var(--amber);
-    cursor: pointer;
-    font-weight: 500;
-    transition: all .15s;
+  }
+  .btn-amber:hover { background: #fde0c0; }
+  .btn-csv {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .btn-csv:hover { background: #25623f; }
+  .btn-notion {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-notion:hover { background: #574c8f; }
+  .btn-notion:disabled { opacity: 0.5; cursor: wait; }
+  .btn-row {
+    display: flex;
+    gap: 10px;
     margin-left: auto;
   }
-  .reset-btn:hover { background: #fde0c0; }
 
   .no-date {
     text-align: center;
@@ -156,11 +179,16 @@
     font-weight: 600;
     color: var(--text-sub);
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     padding: 0 4px;
     margin-bottom: 6px;
     padding-bottom: 6px;
     border-bottom: 1px solid var(--border);
+  }
+  .phase-head .range {
+    font-weight: 400;
+    color: var(--text-xs);
+    font-size: 11px;
+    margin-left: 6px;
   }
 
   .col-head {
@@ -192,6 +220,7 @@
   .tr:hover { border-color: var(--border-strong); }
   .tr.hide { display: none; }
   .tr.mtg-row { background: var(--mtg-bg); border-color: var(--border-strong); }
+  .tr.crit-row { border-left: 3px solid var(--crit); }
   .tr.past .end { color: var(--red); }
   .tr.today .end { color: var(--amber); font-weight: 700; }
 
@@ -212,6 +241,18 @@
     font-size: 12px;
     line-height: 1.45;
     color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .crit-badge {
+    font-size: 9px;
+    color: var(--crit);
+    background: var(--crit-light);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+    white-space: nowrap;
   }
 
   .dcell {
@@ -252,13 +293,6 @@
   .cp:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
   .cp.done { background: var(--green-light); border-color: var(--green); color: var(--green); }
 
-  .phase-note {
-    font-size: 10px;
-    color: var(--text-xs);
-    padding: 4px 10px;
-    font-style: italic;
-  }
-
   .legend {
     display: flex;
     gap: 12px;
@@ -276,13 +310,42 @@
     font-size: 11px;
     color: var(--text-sub);
   }
+  .note {
+    font-size: 11px;
+    color: var(--text-xs);
+    background: var(--amber-light);
+    border: 1px solid #f0d8b8;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1630;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all .3s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>オフラインイベント タスク逆算ツール</h1>
-  <p>月ノ神影｜開催日と規模を選択するとタスクの開始日・期限日が自動計算されます</p>
+  <p>月ノ神影｜開催日と規模を選択するとタスクの開始日・期限日が自動計算されます（依存関係対応）</p>
 </div>
 
 <div class="main">
@@ -298,14 +361,31 @@
         <button onclick="setScale('small',this)">小規模</button>
       </div>
     </div>
-    <button class="reset-btn" onclick="resetOpts()">🟡 全て選択に戻す</button>
+    <div class="ctrl-group">
+      <span class="ctrl-label">イベント名</span>
+      <input type="text" id="ename" placeholder="例：身曾岐神社イベント">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-amber" onclick="resetOpts()">🟡 全て選択に戻す</button>
+      <button class="btn btn-csv" onclick="downloadCSV()">📥 CSV出力（Notion用）</button>
+      <button class="btn btn-notion" id="notionBtn" onclick="sendToNotion()">📤 Notionに送信</button>
+    </div>
+  </div>
+
+  <div class="note">
+    ⚠️ <strong>10日前ルールについて</strong>：演出・BGM指示書の会場提出と台本の確定は「<strong>遅くとも10日前まで</strong>」が最低ラインです。10日前は本来かなり遅いため、実際にはもっと早く確定させてください。詳細は別紙「オフラインイベント進行マニュアル」の注意点を参照。
+  </div>
+
+  <div class="note">
+    🔴 <strong>クリティカルパス（必達タスク）について</strong>：「<strong>必達</strong>」と表示されたタスクは、遅れると後続が連鎖的に詰まり開催に影響する重要タスクです。このツールでは左端の赤線で示しています。CSVには「クリティカルパス」列として出力されるので、Notion取り込み後は「<strong>赤色のタスク＝必達</strong>」として最優先で進捗を管理してください。
   </div>
 
   <div class="legend">
     <div class="legend-item"><span class="tag t-all">⚫共通</span> 両規模共通</div>
-    <div class="legend-item"><span class="tag t-big">🔴大規模</span> 大規模のみ必須</div>
-    <div class="legend-item"><span class="tag t-sml">🔵小規模</span> 小規模のみ必須</div>
+    <div class="legend-item"><span class="tag t-big">🔴大規模</span> 大規模のみ</div>
+    <div class="legend-item"><span class="tag t-sml">🔵小規模</span> 小規模のみ</div>
     <div class="legend-item"><span class="tag t-opt">🟡選択</span> チェックでON/OFF</div>
+    <div class="legend-item"><span class="crit-badge">必達</span> クリティカルパス（遅延=開催に影響）</div>
     <div class="legend-item" style="margin-left:auto;font-size:10px;color:var(--text-xs)">📋 = MTG・単日実施タスク</div>
   </div>
 
@@ -314,67 +394,171 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
+/* =========================================================================
+   タスク定義
+   - id      : 依存参照用のユニークID
+   - ph      : フェーズ名
+   - tag     : all / big / sml / opt
+   - name    : タスク名
+   - dur     : 作業日数
+   - mtg     : 単日実施（MTG・撮影・下見など）
+   - crit    : クリティカルパス上のタスク
+   期限の決め方（どちらか）：
+   - fixedEnd_l / fixedEnd_s : 開催日からの固定オフセット（マイナス=前）
+   - after   : 依存先タスクid（その完了翌日に着手）。期限 = 着手 + dur - 1
+   両方ある場合は「fixedEndを期限の上限」とし、afterで着手が遅れたら後ろにずらす。
+   ========================================================================= */
 const T=[
-  {ph:"フェーズ0キックオフ",end_l:-187,end_s:-97,dur:1,tag:"all",name:"📋 フェーズ0キックオフMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:14,tag:"all",name:"イベントのコンセプト・規模感の決定",mtg:false,phMtg_l:-187,phMtg_s:-97},
-  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:21,tag:"all",name:"会場候補の選定・見積もり取得",mtg:false,phMtg_l:-187,phMtg_s:-97},
-  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:14,tag:"all",name:"全体予算・チケット価格の設定",mtg:false,phMtg_l:-187,phMtg_s:-97},
-  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:5,tag:"big",name:"teket仮押さえ",mtg:false,phMtg_l:-187,phMtg_s:-97},
-  {ph:"フェーズ0｜会場・予算・チケット",end_l:-180,end_s:-90,dur:5,tag:"sml",name:"会場仮押さえ",mtg:false,phMtg_l:-187,phMtg_s:-97},
-  {ph:"フェーズ1キックオフ",end_l:-127,end_s:-67,dur:1,tag:"all",name:"📋 フェーズ1キックオフMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:5,tag:"all",name:"全体スケジュールの作成・Notionへの登録",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:21,tag:"all",name:"イベント概要の決定（日時・場所・規模・目的）",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:21,tag:"all",name:"プログラム概要の決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:7,tag:"all",name:"スタッフ募集の開始",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:14,tag:"opt",name:"ノベルティの方向性決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-120,end_s:-60,dur:7,tag:"all",name:"撮影プランの決定",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-100,end_s:-40,dur:14,tag:"opt",name:"プログラム内映像の内容考案",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ1｜企画・基本設計",end_l:-90,end_s:-30,dur:14,tag:"opt",name:"撮影スタッフ外注依頼（必要な場合）",mtg:false,phMtg_l:-127,phMtg_s:-67},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"all",name:"各担当の進捗確認・催促（週次）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:56,tag:"opt",name:"制作物の外注発注（納品まで6〜8週間確保）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"プログラム設計フォーマットへの落とし込み",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"プログラム詳細進行の考案（演出込み）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"opt",name:"スライド用文言の決定（投影がある場合）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"all",name:"会場提出用台本・タイムシートの作成",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:28,tag:"opt",name:"演出・BGM指示書の作成",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"備品リストの作成",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"告知文の作成（LINE・メール・会員サイト・Discord）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"all",name:"当日入場処理方法の決定（受付フロー・スタッフ配置）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"opt",name:"スタッフ報酬の決定",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"opt",name:"会場下見の日程調整",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-45,end_s:-21,dur:1,tag:"opt",name:"📋 会場下見の実施",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"opt",name:"ノベルティデザイン可否問い合わせ・決定・発注",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"big",name:"teket販売ページ作成",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"big",name:"チケット販売開始",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:21,tag:"sml",name:"UTAGE販売ページ作成",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"sml",name:"UTAGE販売開始",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-30,end_s:-30,dur:30,tag:"opt",name:"プログラム内映像制作の完了（30日前厳守）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:7,tag:"opt",name:"映像撮影日の調整",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-45,end_s:-21,dur:1,tag:"opt",name:"📋 映像撮影実施",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ2｜制作・準備",end_l:-60,end_s:-30,dur:14,tag:"all",name:"緊急時・悪天候時の代替プランの確認",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"全制作物の納品確認",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"opt",name:"会場打ち合わせの日程調整",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-21,end_s:-14,dur:1,tag:"opt",name:"📋 会場打ち合わせの実施",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-10,end_s:-10,dur:14,tag:"all",name:"演出・BGM指示書の提出確認・催促（10日前までに会場提出）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:14,tag:"all",name:"当日タイムライン・スタッフ役割表の作成・配布",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"緊急連絡体制の確認・共有",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:21,tag:"all",name:"プログラム台本の最終決定（10日前以降変更不可）",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"all",name:"参加者へのリマインド配信",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:7,tag:"opt",name:"📋 リハーサルの実施（音響・映像・進行確認）",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-30,end_s:-21,dur:5,tag:"all",name:"当日の撮影プラン最終確認",mtg:false,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ3｜最終準備",end_l:-14,end_s:-14,dur:1,tag:"opt",name:"📋 スタッフオリエンテーションの実施",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ5｜事後対応",end_l:1,end_s:1,dur:1,tag:"all",name:"📋 KPT振り返りMTG・議事録",mtg:true,phMtg_l:null,phMtg_s:null},
-  {ph:"フェーズ5｜事後対応",end_l:2,end_s:2,dur:1,tag:"all",name:"参加者へのフォローメッセージ（Discord）",mtg:false,phMtg_l:1,phMtg_s:1},
-  {ph:"フェーズ5｜事後対応",end_l:7,end_s:7,dur:7,tag:"all",name:"経費精算整理（エクセル）",mtg:false,phMtg_l:1,phMtg_s:1},
-  {ph:"フェーズ5｜事後対応",end_l:7,end_s:7,dur:5,tag:"all",name:"改善点のNotionへの記録",mtg:false,phMtg_l:1,phMtg_s:1},
-  {ph:"フェーズ5｜事後対応",end_l:14,end_s:14,dur:14,tag:"all",name:"アーカイブ動画の編集・公開手配",mtg:false,phMtg_l:1,phMtg_s:1},
-  {ph:"フェーズ5｜事後対応",end_l:14,end_s:14,dur:5,tag:"all",name:"会員サイト「集」フォルダへの掲載・告知",mtg:false,phMtg_l:1,phMtg_s:1},
+  // ===== フェーズ0 キックオフ =====
+  {id:"p0mtg", ph:"フェーズ0キックオフ", tag:"all", name:"📋 フェーズ0キックオフMTG・議事録", dur:1, mtg:true, crit:true,
+    fixedEnd_l:-187, fixedEnd_s:-105},
+
+  // ===== フェーズ0 会場・予算・チケット =====
+  {id:"concept", ph:"フェーズ0｜会場・予算・チケット", tag:"all", name:"イベントのコンセプト・規模感の決定", dur:14, crit:true, startWith:"p0mtg",
+    fixedEnd_l:-173, fixedEnd_s:-91},
+  {id:"venue_find", ph:"フェーズ0｜会場・予算・チケット", tag:"all", name:"会場候補の選定・見積もり取得", dur:21, crit:true, after:"p0mtg",
+    fixedEnd_l:-166, fixedEnd_s:-91},
+  {id:"budget", ph:"フェーズ0｜会場・予算・チケット", tag:"all", name:"全体予算・チケット価格の設定", dur:14, after:"concept",
+    fixedEnd_l:-166, fixedEnd_s:-88},
+  {id:"venue_hold", ph:"フェーズ0｜会場・予算・チケット", tag:"all", name:"会場の仮押さえ", dur:5, after:"venue_find",
+    fixedEnd_l:-160, fixedEnd_s:-86},
+
+  {id:"venue_visit_sched", ph:"フェーズ0｜会場・予算・チケット", tag:"all", onlyScale:"large", name:"会場下見の日程調整", dur:5, after:"venue_hold",
+    fixedEnd_l:-158},
+  {id:"venue_visit", ph:"フェーズ0｜会場・予算・チケット", tag:"all", onlyScale:"large", name:"📋 会場下見の実施（本契約前に現地確認）", dur:1, mtg:true, after:"venue_visit_sched",
+    fixedEnd_l:-153},
+
+  // ===== フェーズ0.5 会場確定・予告（空白を埋める） =====
+  {id:"venue_contract", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"会場との本契約締結", dur:14, crit:true, after_l:"venue_visit", after_s:"venue_hold",
+    fixedEnd_l:-150, fixedEnd_s:-80},
+  {id:"venue_rule", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"会場規定・搬入出・設備（電源/音響/プロジェクター）の確認", dur:10, startWith:"venue_contract",
+    fixedEnd_l:-140, fixedEnd_s:-74},
+  {id:"venue_cancel", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"会場キャンセルポリシーの確認", dur:5, startWith:"venue_contract",
+    fixedEnd_l:-145, fixedEnd_s:-78},
+  {id:"price_fix", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"チケット価格の最終確定", dur:7, after:"budget",
+    fixedEnd_l:-145, fixedEnd_s:-80},
+  {id:"date_preann", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"開催日の予告告知（日付・場所のみ先行／遠方参加者向け）", dur:5, after:"price_fix",
+    fixedEnd_l:-135, fixedEnd_s:-73},
+  {id:"staff_recruit", ph:"フェーズ0.5｜会場確定・予告", tag:"all", name:"スタッフ募集の開始", dur:30, after:"concept",
+    fixedEnd_l:-130, fixedEnd_s:-74},
+  {id:"staff_pay", ph:"フェーズ0.5｜会場確定・予告", tag:"opt", name:"スタッフ報酬の決定（予算確定時）", dur:7, after:"budget",
+    fixedEnd_l:-150, fixedEnd_s:-80},
+  {id:"novelty_dir", ph:"フェーズ0.5｜会場確定・予告", tag:"opt", onlyScale:"large", name:"ノベルティの方向性決定（モノ・デザイン／予算確定時）", dur:10, after:"price_fix",
+    fixedEnd_l:-100},
+
+  // ===== フェーズ1 キックオフ =====
+  {id:"hearing_draft", ph:"フェーズ1キックオフ", tag:"all", name:"企画ヒアリングシートの下書き作成（推進者が自案を持ち込む）", dur:10, crit:true, after:"concept",
+    fixedEnd_l:-128, fixedEnd_s:-83},
+  {id:"p1agenda", ph:"フェーズ1キックオフ", tag:"all", name:"フェーズ1 MTGアジェンダ整理（PM）", dur:3, after:"hearing_draft",
+    fixedEnd_l:-128, fixedEnd_s:-83},
+  {id:"p1mtg", ph:"フェーズ1キックオフ", tag:"all", name:"📋 フェーズ1キックオフMTG・議事録（企画ヒアリングシートで方向性決定）", dur:1, mtg:true, crit:true, after:"p1agenda",
+    fixedEnd_l:-127, fixedEnd_s:-82},
+
+  // ===== フェーズ1 企画・基本設計 =====
+  {id:"schedule", ph:"フェーズ1｜企画・基本設計", tag:"all", name:"全体スケジュールの見直し・調整（MTG決定を反映）", dur:5, after:"p1mtg",
+    fixedEnd_l:-118, fixedEnd_s:-65},
+  {id:"event_outline", ph:"フェーズ1｜企画・基本設計", tag:"all", name:"イベント概要の決定（日時・場所・規模・目的）", dur:14, crit:true, after:"p1mtg",
+    fixedEnd_l:-113, fixedEnd_s:-65},
+  {id:"prog_outline", ph:"フェーズ1｜企画・基本設計", tag:"all", name:"プログラム概要の決定", dur:14, crit:true, after:"p1mtg",
+    fixedEnd_l:-113, fixedEnd_s:-65},
+  {id:"shoot_plan", ph:"フェーズ1｜企画・基本設計", tag:"all", name:"撮影プランの決定（記録撮影）", dur:7, after:"p1mtg",
+    fixedEnd_l:-116, fixedEnd_s:-65},
+  {id:"video_idea", ph:"フェーズ1｜企画・基本設計", tag:"opt", onlyScale:"large", name:"プログラム内映像の内容考案", dur:14, after:"p1mtg",
+    fixedEnd_l:-110},
+  {id:"shoot_outsource", ph:"フェーズ1｜企画・基本設計", tag:"opt", name:"撮影スタッフ外注依頼（必要な場合）", dur:14, after:"staff_recruit",
+    fixedEnd_l:-110, fixedEnd_s:-62},
+
+  // ===== フェーズ2 制作・準備 =====
+  {id:"progress_check", ph:"フェーズ2｜制作・準備", tag:"all", name:"各担当の進捗確認・催促（週次）", dur:14, after:"p1mtg",
+    fixedEnd_l:-30, fixedEnd_s:-21},
+  {id:"prod_outsource", ph:"フェーズ2｜制作・準備", tag:"opt", name:"制作物の外注発注（フェーズ1MTGで仕様検討・納品6〜8週間確保）", dur:7, crit:true, after:"p1mtg",
+    fixedEnd_l:-75, fixedEnd_s:-55},
+  {id:"prog_detail", ph:"フェーズ2｜制作・準備", tag:"all", name:"プログラム詳細進行の考案（演出込み・設計フォーマット）", dur:21, dur_s:10, crit:true, after:"prog_outline",
+    fixedEnd_l:-75, fixedEnd_s:-55},
+  {id:"prog_format", ph:"フェーズ2｜制作・準備", tag:"all", name:"プログラム設計フォーマットへの落とし込み", dur:14, dur_s:7, crit:true, after:"prog_detail",
+    fixedEnd_l:-60, fixedEnd_s:-48},
+  {id:"slide_text", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"スライド用文言の決定（投影がある場合）", dur:14, after:"prog_detail",
+    fixedEnd_l:-50},
+  {id:"venue_script", ph:"フェーズ2｜制作・準備", tag:"all", name:"会場提出用台本・タイムシートの作成", dur:14, dur_s:7, after:"prog_format",
+    fixedEnd_l:-45, fixedEnd_s:-30},
+  {id:"bgm_doc", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"演出・BGM指示書の作成", dur:21, crit:true, after:"prog_format",
+    fixedEnd_l:-40},
+  {id:"bgm_doc_s", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"small", name:"音響・BGMの確認（マイク・音源の手配）", dur:7, after:"prog_format",
+    fixedEnd_s:-25},
+  {id:"equip_list", ph:"フェーズ2｜制作・準備", tag:"all", name:"備品リストの作成", dur:7, after:"prog_format",
+    fixedEnd_l:-35, fixedEnd_s:-25},
+  {id:"announce", ph:"フェーズ2｜制作・準備", tag:"all", name:"告知文の作成（LINE・メール・会員サイト・Discord）", dur:7, crit:true, after_l:"teket_page", after_s:"utage_page",
+    fixedEnd_l:-65, fixedEnd_s:-50},
+  {id:"entry_flow", ph:"フェーズ2｜制作・準備", tag:"all", name:"当日入場処理方法の決定（受付フロー・スタッフ配置）", dur:7, after:"prog_format",
+    fixedEnd_l:-40, fixedEnd_s:-28},
+  {id:"novelty_order", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"ノベルティのデザイン確定・発注（製造45日想定）", dur:14, after:"novelty_dir",
+    fixedEnd_l:-75},
+  {id:"novelty_deliver", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"ノベルティ納品完了（30日前厳守・製造45日逆算）", dur:45, after:"novelty_order",
+    fixedEnd_l:-30},
+  {id:"teket_page", ph:"フェーズ2｜制作・準備", tag:"big", name:"teket販売ページ作成（タイムテーブル掲載）", dur:14, after:"prog_outline",
+    fixedEnd_l:-75},
+  {id:"teket_open", ph:"フェーズ2｜制作・準備", tag:"big", name:"チケット販売開始（2ヶ月前）", dur:1, after:"announce",
+    fixedEnd_l:-60},
+  {id:"utage_page", ph:"フェーズ2｜制作・準備", tag:"sml", name:"UTAGE販売ページ作成（タイムテーブル掲載）", dur:14, after:"prog_outline",
+    fixedEnd_s:-70},
+  {id:"utage_open", ph:"フェーズ2｜制作・準備", tag:"sml", name:"UTAGE販売開始（2ヶ月〜1.5ヶ月前）", dur:1, after:"announce",
+    fixedEnd_s:-45},
+  {id:"video_done", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"プログラム内映像制作の完了（30日前厳守・編集60日確保）", dur:60, crit:true, after:"shoot_do",
+    fixedEnd_l:-30},
+  {id:"shoot_sched", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"プログラム内映像の撮影日調整", dur:7, after:"video_idea",
+    fixedEnd_l:-104},
+  {id:"shoot_do", ph:"フェーズ2｜制作・準備", tag:"opt", onlyScale:"large", name:"📋 プログラム内映像の撮影実施（編集60日＋30日前完了を逆算）", dur:1, mtg:true, after:"shoot_sched",
+    fixedEnd_l:-96},
+  {id:"backup_plan", ph:"フェーズ2｜制作・準備", tag:"all", name:"緊急時・悪天候時の代替プランの確認", dur:14, after:"prog_format",
+    fixedEnd_l:-40, fixedEnd_s:-28},
+
+  // ===== フェーズ3 最終準備 =====
+  {id:"delivery_check", ph:"フェーズ3｜最終準備", tag:"all", name:"全制作物の納品確認", dur:7, crit:true, after:"prod_outsource",
+    fixedEnd_l:-25, fixedEnd_s:-18},
+  {id:"venue_meet_sched", ph:"フェーズ3｜最終準備", tag:"all", name:"会場打ち合わせ・リハーサルの日程調整", dur:7, after_l:"bgm_doc", after_s:"bgm_doc_s",
+    fixedEnd_l:-40, fixedEnd_s:-37},
+  {id:"venue_meet", ph:"フェーズ3｜最終準備", tag:"all", name:"📋 会場打ち合わせ・リハーサルの実施（指示書持参／進行・音響・BGM・搬入出の詳細確認）", dur:1, mtg:true, crit:true, after:"venue_meet_sched",
+    fixedEnd_l:-30, fixedEnd_s:-30},
+  {id:"daytime_line", ph:"フェーズ3｜最終準備", tag:"all", name:"当日タイムライン・スタッフ役割表の作成・配布", dur:14, dur_s:7, after:"venue_meet",
+    fixedEnd_l:-20, fixedEnd_s:-18},
+  {id:"day_ops_list", ph:"フェーズ3｜最終準備", tag:"all", name:"当日運営タスク一覧の作成・共有（当日の役割と動きを確定）", dur:7, dur_s:4, crit:true, after:"venue_meet",
+    fixedEnd_l:-16, fixedEnd_s:-16},
+  {id:"emergency", ph:"フェーズ3｜最終準備", tag:"all", name:"緊急連絡体制の確認・共有", dur:7, dur_s:4, after:"daytime_line",
+    fixedEnd_l:-14, fixedEnd_s:-14},
+  {id:"remind", ph:"フェーズ3｜最終準備", tag:"all", name:"参加者へのリマインド配信", dur:3, after:"day_ops_list",
+    fixedEnd_l:-3, fixedEnd_s:-3},
+  {id:"shoot_final", ph:"フェーズ3｜最終準備", tag:"all", name:"当日の撮影プラン最終確認", dur:5, after:"venue_meet",
+    fixedEnd_l:-7, fixedEnd_s:-7},
+  {id:"staff_orient", ph:"フェーズ3｜最終準備", tag:"opt", name:"📋 スタッフオリエンテーションの実施", dur:1, mtg:true, after:"day_ops_list",
+    fixedEnd_l:-9, fixedEnd_s:-9},
+
+  // ===== フェーズ4 当日 =====
+  {id:"day_inquiry", ph:"フェーズ4｜当日", tag:"all", name:"📋 当日の参加者問い合わせ窓口対応（PM）", dur:1, mtg:true,
+    fixedEnd_l:0, fixedEnd_s:0},
+
+  // ===== フェーズ5 事後対応 =====
+  {id:"kpt", ph:"フェーズ5｜事後対応", tag:"all", name:"📋 KPT振り返りMTG・議事録", dur:1, mtg:true,
+    fixedEnd_l:7, fixedEnd_s:7},
+  {id:"followup", ph:"フェーズ5｜事後対応", tag:"all", name:"参加者へのフォローメッセージ（Discord）", dur:1,
+    fixedEnd_l:2, fixedEnd_s:2},
+  {id:"expense", ph:"フェーズ5｜事後対応", tag:"all", name:"経費精算整理（エクセル）", dur:7,
+    fixedEnd_l:7, fixedEnd_s:7},
+  {id:"kaizen", ph:"フェーズ5｜事後対応", tag:"all", name:"改善点のNotionへの記録", dur:5, after:"kpt",
+    fixedEnd_l:12, fixedEnd_s:12},
+  {id:"archive", ph:"フェーズ5｜事後対応", tag:"all", name:"アーカイブ動画の編集・公開手配", dur:14,
+    fixedEnd_l:14, fixedEnd_s:14},
+  {id:"site_post", ph:"フェーズ5｜事後対応", tag:"all", name:"会員サイト「集」フォルダへの掲載・告知", dur:5, after:"archive",
+    fixedEnd_l:19, fixedEnd_s:19},
 ];
 
 let scale='large';
 let opts={};
-T.forEach((_,i)=>{opts[i]=true});
+T.forEach(t=>{ if(t.tag==='opt') opts[t.id]=true; });
+
+const byId={}; T.forEach(t=>byId[t.id]=t);
 
 function setScale(s,btn){
   scale=s;
@@ -382,14 +566,26 @@ function setScale(s,btn){
   btn.classList.add('on');
   render();
 }
-function resetOpts(){T.forEach((_,i)=>{opts[i]=true});render();}
+function resetOpts(){ T.forEach(t=>{ if(t.tag==='opt') opts[t.id]=true; }); render(); }
 function addDays(base,n){const d=new Date(base);d.setDate(d.getDate()+n);return d;}
 function fmt(d){return (d.getMonth()+1)+'月'+d.getDate()+'日';}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
-function visible(t,i){
+function getFixed(t){ const v = scale==='large'?t.fixedEnd_l:t.fixedEnd_s; return (v===undefined||v===null)?null:v; }
+function getDur(t){ if(scale==='small' && t.dur_s!==undefined && t.dur_s!==null) return t.dur_s; return t.dur; }
+
+function visible(t){
+  if(t.onlyScale && ((t.onlyScale==='large'&&scale!=='large')||(t.onlyScale==='small'&&scale!=='small'))) return false;
   if(t.tag==='big'&&scale==='small') return false;
   if(t.tag==='sml'&&scale==='large') return false;
-  if(t.tag==='opt'&&!opts[i]) return false;
+  if(t.tag==='opt'&&!opts[t.id]) return false;
+  return true;
+}
+/* そのタスクが現在の規模で「定義上」存在するか（optのON/OFFは無視） */
+function existsInScale(t){
+  if(t.onlyScale && ((t.onlyScale==='large'&&scale!=='large')||(t.onlyScale==='small'&&scale!=='small'))) return false;
+  if(t.tag==='big'&&scale==='small') return false;
+  if(t.tag==='sml'&&scale==='large') return false;
   return true;
 }
 
@@ -399,9 +595,82 @@ function tagEl(tag){
   if(tag==='sml') return `<span class="tag t-sml">🔵小規模</span>`;
   return `<span class="tag t-opt">🟡選択</span>`;
 }
-
 function isMtgStyle(t){
   return t.mtg && (t.name.includes('キックオフ')||t.name.includes('KPT')||t.name.includes('振り返り'));
+}
+
+/* 依存先が現在の規模に存在しない場合、存在する祖先まで遡る */
+function resolveAfter(t){
+  let aid = (scale==='large' && t.after_l) ? t.after_l
+          : (scale==='small' && t.after_s) ? t.after_s
+          : t.after;
+  let guard=0;
+  while(aid && byId[aid] && !existsInScale(byId[aid]) && guard<20){
+    aid=byId[aid].after;
+    guard++;
+  }
+  return (aid && byId[aid] && existsInScale(byId[aid])) ? aid : null;
+}
+
+/* 依存解決：各タスクの start / end を計算（複数パスで収束） */
+let computed={};
+function computeDates(base){
+  computed={};
+  // 初期化：fixedEnd を仮の end とする
+  T.forEach(t=>{
+    const fx=getFixed(t);
+    computed[t.id]={ end:(fx!==null)?addDays(base,fx):null, start:null, resolved:false };
+  });
+  // 反復計算（依存チェーンを解決）
+  for(let pass=0; pass<T.length+2; pass++){
+    T.forEach(t=>{
+      const c=computed[t.id];
+      const fx=getFixed(t);
+      let fixedEndD=(fx!==null)?addDays(base,fx):null;
+
+      // 依存先の完了翌日（非表示タスクはスキップして有効な祖先へ）
+      let afterStart=null;
+      const aid=resolveAfter(t);
+      if(aid && computed[aid] && computed[aid].end){
+        afterStart=addDays(computed[aid].end,1);
+      }
+
+      // startWith：指定タスクと同じ開始日から着手（並行作業）
+      let sameStart=null;
+      if(t.startWith && computed[t.startWith] && computed[t.startWith].start){
+        sameStart=new Date(computed[t.startWith].start);
+      }
+
+      // 着手日：startWith > 依存先完了翌日 > fixedEnd逆算 の優先順
+      const dur=getDur(t);
+      let startD;
+      if(sameStart){
+        startD=new Date(sameStart);
+      } else if(afterStart){
+        startD=new Date(afterStart);
+      } else if(fixedEndD){
+        startD=addDays(fixedEndD,-(dur-1));
+      } else {
+        startD=base; // フォールバック
+      }
+
+      // 期限日：着手 + dur - 1。ただし fixedEnd があればそれを下限（遅い方=より後ろ）に。
+      let endByDur=addDays(startD,dur-1);
+      let endD;
+      if(fixedEndD && !sameStart){
+        endD = endByDur>fixedEndD ? endByDur : fixedEndD;
+        if(!afterStart) startD=addDays(endD,-(dur-1));
+      } else {
+        endD=endByDur;
+      }
+      // 単日タスク（MTG・撮影・下見など dur=1）は開始＝終了に固定
+      if(dur===1){
+        if(afterStart||sameStart){ endD=new Date(startD); }
+        else { startD=new Date(endD); }
+      }
+      c.start=startD; c.end=endD;
+    });
+  }
 }
 
 function render(){
@@ -413,52 +682,50 @@ function render(){
   }
   const base=new Date(val+'T00:00:00');
   const today=new Date();today.setHours(0,0,0,0);
+  computeDates(base);
+
   const phases=[...new Set(T.map(t=>t.ph))];
   let html='';
 
   phases.forEach(ph=>{
-    const pts=T.map((t,i)=>({...t,i})).filter(t=>t.ph===ph);
-    const vpts=pts.filter(t=>visible(t,t.i));
+    const pts=T.filter(t=>t.ph===ph);
+    const vpts=pts.filter(t=>visible(t));
     if(!vpts.length) return;
 
-    const mainMtg=pts.find(t=>t.mtg&&isMtgStyle(t));
-    const mtgEndD=mainMtg?addDays(base,scale==='large'?mainMtg.end_l:mainMtg.end_s):null;
-    const afterMtg=mtgEndD?addDays(mtgEndD,1):null;
+    // フェーズの期間レンジ表示
+    const ends=vpts.map(t=>computed[t.id].end).filter(Boolean);
+    const starts=vpts.map(t=>computed[t.id].start).filter(Boolean);
+    let rangeStr='';
+    if(starts.length&&ends.length){
+      const mn=new Date(Math.min(...starts.map(d=>d.getTime())));
+      const mx=new Date(Math.max(...ends.map(d=>d.getTime())));
+      rangeStr=`${fmt(mn)} 〜 ${fmt(mx)}`;
+    }
 
-    html+=`<div class="phase"><div class="phase-head">${ph}</div>
+    html+=`<div class="phase"><div class="phase-head">${ph}<span class="range">${rangeStr}</span></div>
     <div class="col-head"><span></span><span></span><span>タスク名</span><span>開始日</span><span>期限日</span><span></span></div>`;
 
+    // MTG系を先頭に
     const sorted=[...pts.filter(t=>isMtgStyle(t)),...pts.filter(t=>!isMtgStyle(t))];
 
     sorted.forEach(t=>{
-      const endOff=scale==='large'?t.end_l:t.end_s;
-      const endD=addDays(base,endOff);
-
-      let startD;
-      if(t.mtg){
-        startD=new Date(endD);
-      } else {
-        const durStart=addDays(endD,-t.dur+1);
-        const phMtgOff=scale==='large'?t.phMtg_l:t.phMtg_s;
-        const extAfterMtg=(phMtgOff!==null&&phMtgOff!==undefined)?addDays(base,phMtgOff+1):null;
-        const mtgRef=afterMtg||extAfterMtg;
-        startD=mtgRef&&mtgRef>durStart?new Date(mtgRef):durStart;
-      }
-
+      const c=computed[t.id];
+      const startD=c.start, endD=c.end;
       const diff=Math.round((endD-today)/(1000*60*60*24));
       const isPast=diff<0;
       const isToday=diff===0;
-      const vis=visible(t,t.i);
+      const vis=visible(t);
       const isMtgBg=isMtgStyle(t);
-      const cls=['tr',isMtgBg?'mtg-row':'',!vis?'hide':'',isPast&&vis?'past':'',isToday&&vis?'today':''].filter(Boolean).join(' ');
+      const cls=['tr',isMtgBg?'mtg-row':'',t.crit?'crit-row':'',!vis?'hide':'',isPast&&vis?'past':'',isToday&&vis?'today':''].filter(Boolean).join(' ');
       const ctrl=t.tag==='opt'
-        ?`<input type="checkbox" class="ck" ${opts[t.i]?'checked':''} onchange="toggleOpt(${t.i})">`
+        ?`<input type="checkbox" class="ck" ${opts[t.id]?'checked':''} onchange="toggleOpt('${t.id}')">`
         :`<span></span>`;
       const nameOnly=t.name.replace('📋 ','');
+      const critBadge=t.crit?`<span class="crit-badge">必達</span>`:'';
       html+=`<div class="${cls}">
         ${ctrl}
         ${tagEl(t.tag)}
-        <span class="tname">${t.name}</span>
+        <span class="tname">${critBadge}${t.name}</span>
         <span class="dcell">${fmt(startD)}</span>
         <span class="end">${fmt(endD)}</span>
         <button class="cp" onclick="copyName(this,'${nameOnly.replace(/'/g,"&#39;").replace(/"/g,"&quot;")}')" title="タスク名をコピー">
@@ -472,7 +739,14 @@ function render(){
   wrap.innerHTML=html;
 }
 
-function toggleOpt(i){opts[i]=!opts[i];render();}
+function toggleOpt(id){opts[id]=!opts[id];render();}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
 
 function copyName(btn,name){
   navigator.clipboard.writeText(name).then(()=>{
@@ -483,15 +757,106 @@ function copyName(btn,name){
       btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
     },1500);
   }).catch(()=>{
-    // フォールバック
     const el=document.createElement('textarea');
-    el.value=name;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    btn.classList.add('done');
-    setTimeout(()=>btn.classList.remove('done'),1500);
+    el.value=name; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    btn.classList.add('done'); setTimeout(()=>btn.classList.remove('done'),1500);
+  });
+}
+
+/* CSV出力（Notion既存DB向け・期間型日付） */
+function downloadCSV(){
+  const val=document.getElementById('edate').value;
+  if(!val){ showToast('先に開催日を入力してください'); return; }
+  const base=new Date(val+'T00:00:00');
+  computeDates(base);
+
+  const ename=document.getElementById('ename').value.trim()||'イベント';
+  const fname=iso(base).replace(/-/g,'')+'_'+ename;
+
+  // 表示中タスクのみ
+  const rows=[];
+  rows.push(['名前','ステータス','日付','クリティカルパス','担当者']);
+  T.forEach(t=>{
+    if(!visible(t)) return;
+    const c=computed[t.id];
+    const nameOnly=t.name.replace('📋 ','');
+    // Notion期間型：開始 → 終了
+    const dateStr = iso(c.start)+' → '+iso(c.end);
+    const crit = t.crit ? '必達' : '';
+    rows.push([nameOnly,'未着手',dateStr,crit,'']);
+  });
+
+  // CSV化（カンマ・改行・ダブルクォートをエスケープ）
+  const esc=s=>{ s=String(s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const csv='\uFEFF'+rows.map(r=>r.map(esc).join(',')).join('\r\n');
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSVを出力しました（表示中の'+(rows.length-1)+'タスク）');
+}
+
+/* Notionへ送信（GAS Webアプリ経由・テンプレ本文込みで一括作成） */
+const GAS_URL='https://script.google.com/macros/s/AKfycbypPVF4j7EiDzNtYVEwAg_2gGHWcBq0EOudOMArvMRQaH7FhrMLK_ac0lN2QCrUAm2xCQ/exec';
+
+function sendToNotion(){
+  const val=document.getElementById('edate').value;
+  if(!val){ showToast('先に開催日を入力してください'); return; }
+  const base=new Date(val+'T00:00:00');
+  computeDates(base);
+
+  // 表示中タスクを収集
+  const tasks=[];
+  T.forEach(t=>{
+    if(!visible(t)) return;
+    const c=computed[t.id];
+    tasks.push({
+      name: t.name.replace('📋 ',''),
+      start: iso(c.start),
+      end: iso(c.end),
+      critical: !!t.crit
+    });
+  });
+  if(!tasks.length){ showToast('送信するタスクがありません'); return; }
+
+  // 合言葉を入力
+  const pass=prompt('合言葉を入力してください\n（'+tasks.length+'件のタスクをNotionに作成します）');
+  if(pass===null) return; // キャンセル
+  if(!pass.trim()){ showToast('合言葉が空です'); return; }
+
+  const btn=document.getElementById('notionBtn');
+  btn.disabled=true;
+  btn.textContent='送信中…';
+  showToast('Notionに送信中…（'+tasks.length+'件）');
+
+  // GASはCORSプリフライトを避けるため text/plain で送る
+  fetch(GAS_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ passcode: pass, tasks: tasks })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    btn.disabled=false;
+    btn.textContent='📤 Notionに送信';
+    if(d.ok){
+      showToast('✅ '+d.created+'件をNotionに作成しました');
+    } else if(d.error){
+      showToast('⚠️ '+d.error);
+    } else {
+      showToast('⚠️ '+d.created+'/'+d.total+'件作成（一部失敗）');
+      if(d.errors&&d.errors.length) console.error(d.errors.join('\n'));
+    }
+  })
+  .catch(err=>{
+    btn.disabled=false;
+    btn.textContent='📤 Notionに送信';
+    showToast('⚠️ 送信に失敗しました');
+    console.error(err);
   });
 }
 
